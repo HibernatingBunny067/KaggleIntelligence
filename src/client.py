@@ -1,10 +1,11 @@
-from typing import Literal
+import requests
+from typing import Literal,Union
 import time
+
 class KaggleClient:
     BASE_URL = 'https://www.kaggle.com/api/i/'
-    def __init__(self,session,auth,username):
+    def __init__(self,session:requests.Session,username):
         self.session = session
-        self.auth = auth
         self.username = username
         self.user_info = {}
         self.user_id = None
@@ -26,7 +27,7 @@ class KaggleClient:
         print('UserId: {id}'.format(id = self.user_id))
 
 
-    def _post(self, endpoint, payload, log_once=False):
+    def _post(self, endpoint, payload, log_once=False) -> Union[dict,list[dict]]:
         url = self.BASE_URL + endpoint
         key = (endpoint,str(payload))
         if key in self._cache:
@@ -40,8 +41,8 @@ class KaggleClient:
                 response = self.session.post(
                     url,
                     json=payload,
-                    headers=self.auth.headers,
-                    cookies=self.auth.cookies,
+                    # headers=self.auth.headers,
+                    # cookies=self.auth.cookies,
                     timeout=15
                 )
 
@@ -51,7 +52,7 @@ class KaggleClient:
                     print(f"[Kaggle API] {endpoint} ({end-start:.2f}s)")
 
                 response.raise_for_status()
-                data = response.json()
+                data:dict = response.json()
                 self._cache[key] = data
                 return data
 
@@ -98,8 +99,6 @@ class KaggleClient:
             "users.RankingService/GetUserMedalCounts",
             payload=payload
         )
-    def get_competitions(self):
-        pass
 
     def get_followers(self):
         payload = {
@@ -130,12 +129,33 @@ class KaggleClient:
             payload=payload
         )
     
-    def _get_competitions(self, page_size=20, skip=0,log_once=False):
+    def _paginate(self,endpoint:str,payload:dict,page_size:int=20) -> list[dict]:
+        result = []
+        skip = 0
+        first_call = True
 
+        while True:
+            payload['pageSize'] = page_size
+            payload['skip'] = skip
+
+            data = self._post(endpoint,payload,log_once=first_call)
+            first_call = False
+
+            docs = data.get('documents',[])
+
+            if not docs:
+                break
+            result.extend(docs)
+
+            if len(docs) < page_size:
+                break
+            skip += page_size
+        return result
+
+    def get_all_competitions(self) ->list[dict]:
         payload = {
             "pageToken": "",
-            "pageSize": page_size,
-            "skip": skip,
+            "pageSize":"",
             "competitionsOrderBy": "SEARCH_COMPETITIONS_ORDER_BY_TEAM_RANK",
             "filters": {
                 "query": "",
@@ -152,33 +172,40 @@ class KaggleClient:
             }
         }
 
-        return self._post(
+        return self._paginate(
             "search.SearchContentService/ListSearchContent",
-            payload,
-            log_once
+            payload
         )
-    def get_all_competitions(self):
-        competitons = []
-        skip = 0
-        page_size = 20
-        first_call = True
 
-        while True:
-            data = self._get_competitions(page_size=page_size,skip=skip,log_once = first_call)
-            first_call = False
+    def get_all_scripts(self) ->list[dict[str,Union[str,dict[str,str]]]]:
+        payload = {
+            "pageToken": "",
+            "pageSize":"",
+            "competitionsOrderBy": "LIST_SEARCH_CONTENT_ORDER_BY_VOTES",
+            "filters": {
+                "query": "",
+                "documentTypes": ["KERNEL"],
+                "listType": "LIST_TYPE_USER_PROFILE",
+                "privacy": "PUBLIC",
+                "ownerUserId": self.user_id,
+                "ownerType": "OWNER_TYPE_UNSPECIFIED",
+                "discussionFilters":{
+                    "onlyNewComments":False,
+                    "sourceType":"SEARCH_DISCUSSIONS_SOURCE_TYPE_UNSPECIFIED",
+                    "writeUpInclusionType":"WRITE_UPP_INCLUSION_TYPE_INCLUDE"
+                }
+            }
+        }
 
-            docs = data.get("documents",[])
+        return self._paginate(
+            "https://www.kaggle.com/api/i/search.SearchContentService/ListSearchContent",
+            payload
+        )
 
-            if not docs:
-                break
-            competitons.extend(docs)
-
-            if len(docs) < page_size:
-                break
-
-            skip += page_size
-
-        return competitons
+    def get_all_datasets(self):
+        ...
+    def get_all_discussions(self): 
+        ...
 
     def get_dashboard(self):
         return {

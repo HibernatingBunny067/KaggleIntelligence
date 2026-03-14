@@ -1,17 +1,13 @@
-import json
-from auth import example
-from client import KaggleClient
-from collector import UserCollector
-from features import extract
-from analysis import classify_user
-from visualizer import radar_chart
+from src.auth import KaggleAuth
+from src.client import KaggleClient
+from src.utils import dump_obj
 import requests
 
-session = requests.Session()
+auth = KaggleAuth()
+session = auth.session
 
 client = KaggleClient(
-    session,
-    auth=example,
+    session=session,
     username='abhishek'
 )
 
@@ -29,7 +25,7 @@ client = KaggleClient(
 
 # radar_chart(features)
 
-print((client.get_dashboard()))
+# print((client.get_dashboard()))
 
-with open('example.json','w') as f:
-    json.dump(client.get_dashboard(),f)
+dump_obj(client.get_dashboard(),'Abhishek_data')
+
