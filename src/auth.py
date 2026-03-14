@@ -6,7 +6,9 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from src.logger import logging
 
+loger = logging.getLogger(__name__)
 @dataclass
 class KaggleAuth:
     cookie_str:str|None = None
@@ -14,6 +16,7 @@ class KaggleAuth:
     session: requests.Session = field(init=False)
 
     def __post_init__(self):
+        loger.info('Starting session.')
         self.session = requests.Session()
 
         self.session.headers.update({
@@ -22,9 +25,11 @@ class KaggleAuth:
         })
 
         if self._load_session():
+            loger.info("Using cached session info.")
             return
         
         if self.cookie_str:
+            loger.info("Fetching new session cookies.")
             self._inject_cookie_string(self.cookie_str)
             self._update_xsrf()
             self._save_session()

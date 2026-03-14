@@ -1,8 +1,10 @@
 ##Artifacts and one time used sensitive files
 artifacts/
 session.json
+logs/
 
 # Byte-compiled / optimized / DLL files
+*.pyc
 **/__pycache__/
 __pycache__/
 *.py[codz]

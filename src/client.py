@@ -1,6 +1,9 @@
 import requests
 from typing import Literal,Union
 import time
+from src.logger import logging
+
+logger = logging.getLogger(__name__)
 
 class KaggleClient:
     BASE_URL = 'https://www.kaggle.com/api/i/'
@@ -28,12 +31,14 @@ class KaggleClient:
 
 
     def _post(self, endpoint, payload, log_once=False) -> Union[dict,list[dict]]:
+        logger.info(f"Request to Endpoint: {endpoint}")
         url = self.BASE_URL + endpoint
         key = (endpoint,str(payload))
         if key in self._cache:
+            logger.info(f'Returning cached result.')
             return self._cache[key]
         for attempt in range(3):
-
+            logger.info('Attempting the request.')
             try:
 
                 start = time.time()
@@ -57,7 +62,7 @@ class KaggleClient:
                 return data
 
             except Exception as e:
-
+                logger.warning(f'Exception raise: {e}')
                 if attempt == 2:
                     raise
 
