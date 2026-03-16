@@ -183,34 +183,84 @@ class KaggleClient:
         )
 
     def get_all_scripts(self) ->list[dict[str,Union[str,dict[str,str]]]]:
+        # payload = {
+        #     "pageToken": "",
+        #     "pageSize":"",
+        #     "competitionsOrderBy": "LIST_SEARCH_CONTENT_ORDER_BY_VOTES",
+        #     "filters": {
+        #         "query": "",
+        #         "documentTypes": ["KERNEL"],
+        #         "listType": "LIST_TYPE_USER_PROFILE",
+        #         "privacy": "PUBLIC",
+        #         "ownerUserId": self.user_id,
+        #         "ownerType": "OWNER_TYPE_UNSPECIFIED",
+        #         "discussionFilters":{
+        #             "onlyNewComments":False,
+        #             "sourceType":"SEARCH_DISCUSSIONS_SOURCE_TYPE_UNSPECIFIED",
+        #             "writeUpInclusionType":"WRITE_UPP_INCLUSION_TYPE_INCLUDE"
+        #         }
+        #     }
+        # }
+
         payload = {
-            "pageToken": "",
+            "pageToken":"",
             "pageSize":"",
-            "competitionsOrderBy": "LIST_SEARCH_CONTENT_ORDER_BY_VOTES",
-            "filters": {
-                "query": "",
-                "documentTypes": ["KERNEL"],
-                "listType": "LIST_TYPE_USER_PROFILE",
-                "privacy": "PUBLIC",
-                "ownerUserId": self.user_id,
-                "ownerType": "OWNER_TYPE_UNSPECIFIED",
+            "canonicalOrderBy":"LIST_SEARCH_CONTENT_ORDER_BY_VOTES",
+            "filters":{
+                "query":"","documentTypes":["KERNEL"],
+                "listType":"LIST_TYPE_USER_PROFILE","privacy":"PUBLIC","ownerType":"OWNER_TYPE_UNSPECIFIED",
+                "ownerUserId":self.user_id,
                 "discussionFilters":{
                     "onlyNewComments":False,
-                    "sourceType":"SEARCH_DISCUSSIONS_SOURCE_TYPE_UNSPECIFIED",
-                    "writeUpInclusionType":"WRITE_UPP_INCLUSION_TYPE_INCLUDE"
+                    "sourceType":"SEARCH_DISCUSSIONS_SOURCE_TYPE_UNSPECIFIED","writeUpInclusionType":"WRITE_UP_INCLUSION_TYPE_INCLUDE",
                 }
             }
         }
 
         return self._paginate(
-            "https://www.kaggle.com/api/i/search.SearchContentService/ListSearchContent",
+            "search.SearchContentService/ListSearchContent",
             payload
         )
 
     def get_all_datasets(self):
-        ...
+        payload = {
+            "pageToken":"",
+            "pageSize":"",
+            "canonicalOrderBy":"LIST_SEARCH_CONTENT_ORDER_BY_VOTES",
+            "filters":{
+                "query":"",
+                "documentTypes":["DATASET"],
+                "listType":"LIST_TYPE_USER_PROFILE",
+                "privacy":"PUBLIC",
+                "ownerType":"OWNER_TYPE_UNSPECIFIED",
+                "ownerUserId":self.user_id,
+                "discussionFilters":{
+                    "onlyNewComments":False,"sourceType":"SEARCH_DISCUSSIONS_SOURCE_TYPE_UNSPECIFIED","writeUpInclusionType":"WRITE_UP_INCLUSION_TYPE_INCLUDE"
+                }
+            }
+        }
+        return self._paginate(
+            "search.SearchContentService/ListSearchContent",
+            payload
+        )
     def get_all_discussions(self): 
-        ...
+        payload = {
+            "pageToken":"",
+            "pageSize":"","canonicalOrderBy":"LIST_SEARCH_CONTENT_ORDER_BY_DATE_CREATED","filters":{
+                "query":"",
+                "documentTypes":["TOPIC","COMMENT"],"listType":"LIST_TYPE_USER_PROFILE",
+                "privacy":"PUBLIC",
+                "ownerType":"OWNER_TYPE_OWNS",
+                "ownerUserId":self.user_id,
+                "discussionFilters":{
+                    "onlyNewComments":False,"sourceType":"SEARCH_DISCUSSIONS_SOURCE_TYPE_UNSPECIFIED","writeUpInclusionType":"WRITE_UP_INCLUSION_TYPE_EXCLUDE"
+                    }
+                }
+            }
+        return self._paginate(
+            "search.SearchContentService/ListSearchContent",
+            payload
+        )
 
     def get_dashboard(self):
         return {
